@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "geo-watcher"
 version = "1.0.0"
 description = "Следит, у каких сервисов меняется гео нод Remnawave"
-requires-python = ">=3.13"
+requires-python = ">=3.12"
 dependencies = [
     "adaptix>=3.0.0b12",
     "httpx>=0.28.1",
