@@ -30,19 +30,29 @@ geo-watcher does not require any write scopes.
 
 ## Quick start
 
-1. Create the configuration file:
+1. Prepare the deployment files using either method:
 
-   ```bash
-   cp config.example.toml config.toml
-   ```
+   - Clone the repository and create the configuration file:
+
+     ```bash
+     git clone https://github.com/zen220/geo-watcher.git
+     cd geo-watcher
+     cp config.example.toml config.toml
+     ```
+
+   - Or create a directory manually, copy the contents of
+     [`docker-compose.yml`](docker-compose.yml) into a file with the same name,
+     and paste the contents of
+     [`config.example.toml`](config.example.toml) into `config.toml`.
 
 2. Set your Remnawave credentials and, if needed, Telegram settings in
    `config.toml`.
 
-3. Build and start the watcher:
+3. Pull and start the watcher:
 
    ```bash
-   docker compose up -d --build
+   docker compose pull
+   docker compose up -d
    ```
 
 ## Configuration
