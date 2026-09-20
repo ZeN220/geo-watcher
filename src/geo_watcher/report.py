@@ -131,6 +131,7 @@ class Observation:
     source: Source
     id: str
     name: str
+    kind: CheckKind
     family: Family | None
     # "NL" для страны, "yes"/"no" для доступности, "available (US)" для stash
     value: str
@@ -182,6 +183,7 @@ def _geo_observations(
                     source=source,
                     id=check.id,
                     name=check.name,
+                    kind=check.kind,
                     family=family,
                     value=value.upper()
                     if check.kind is CheckKind.COUNTRY
@@ -204,6 +206,7 @@ def _stash_observations(report: GeocheckReport) -> list[Observation]:
                 source=Source.STASH,
                 id=check.id,
                 name=check.name,
+                kind=CheckKind.AVAILABILITY,
                 family=None,
                 value=value,
             ),
