@@ -4,7 +4,12 @@ from typing import Any, cast
 from uuid import UUID
 
 import pytest
-from remnawave.exceptions import ForbiddenError, UnauthorizedError
+from remnawave.exceptions import (
+    ForbiddenError,
+    NetworkError,
+    RequestTimeoutError,
+    UnauthorizedError,
+)
 from remnawave.types import GeocheckByNodeBody, GeocheckByNodeResultResult
 
 from geo_watcher.remnawave import (
@@ -111,3 +116,12 @@ async def test_check_access_reports_invalid_token():
 
     with pytest.raises(AccessError, match="invalid or expired"):
         await _with_nodes(StubNodes(unauthorized)).check_access()
+
+
+@pytest.mark.parametrize(
+    "error",
+    [NetworkError("Name or service not known"), RequestTimeoutError("timeout")],
+)
+async def test_check_access_reports_connection_failure(error: Exception):
+    with pytest.raises(AccessError, match="check the configured base_url"):
+        await _with_nodes(StubNodes(error)).check_access()

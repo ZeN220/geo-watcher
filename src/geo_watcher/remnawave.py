@@ -1,5 +1,10 @@
 from remnawave import AsyncRemnawave
-from remnawave.exceptions import ForbiddenError, UnauthorizedError
+from remnawave.exceptions import (
+    ForbiddenError,
+    NetworkError,
+    RequestTimeoutError,
+    UnauthorizedError,
+)
 from remnawave.types import GeocheckByNodeBody, Node
 
 from geo_watcher.report import GeocheckReport, load_report
@@ -28,6 +33,11 @@ class RemnawaveGeocheck:
         except ForbiddenError as error:
             raise AccessError(
                 "token lacks the permission to read nodes",
+            ) from error
+        except (NetworkError, RequestTimeoutError) as error:
+            raise AccessError(
+                "cannot connect to the Remnawave panel; check the configured "
+                "base_url, DNS, and network connectivity",
             ) from error
 
     async def get_active_nodes(self) -> list[Node]:
