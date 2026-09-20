@@ -9,6 +9,7 @@ import argparse
 import asyncio
 import logging
 from collections.abc import Sequence
+from importlib.metadata import version
 
 import httpx
 from remnawave import AsyncRemnawave
@@ -23,9 +24,29 @@ logger = logging.getLogger("geo_watcher")
 
 
 def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--config", default="config.toml")
-    parser.add_argument("--once", action="store_true")
+    parser = argparse.ArgumentParser(
+        prog="geo-watcher",
+        description=(
+            "Runs geocheck on every Remnawave node and reports to Telegram "
+            "the checks whose verdict changed since the previous run."
+        ),
+    )
+    parser.add_argument(
+        "--config",
+        default="config.toml",
+        metavar="PATH",
+        help="path to the TOML config (default: %(default)s)",
+    )
+    parser.add_argument(
+        "--once",
+        action="store_true",
+        help="run a single pass and exit instead of looping forever",
+    )
+    parser.add_argument(
+        "--version",
+        action="version",
+        version=f"%(prog)s {version('geo-watcher')}",
+    )
     return parser.parse_args(argv)
 
 
