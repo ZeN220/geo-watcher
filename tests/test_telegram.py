@@ -40,8 +40,21 @@ def test_country_change_renders_flags_and_escapes_names():
     assert "&lt;google&gt;" in html
     assert "🇳🇱 NL" in html
     assert "<mark>🇷🇺 RU</mark>" in html
-    assert "</tg-emoji> География</h4>" in html
-    assert "Доступность</h4>" not in html
+    assert '<td align="center">🇳🇱 NL</td>' in html
+    assert '<td align="center"><mark>🇷🇺 RU</mark>' in html
+    assert "</tg-emoji> Geography</h4>" in html
+    assert "Availability</h4>" not in html
+
+
+def test_availability_values_are_left_aligned():
+    availability = _stash("chatgpt_web", "blocked")
+
+    html = format_html(
+        analyze("nl-1", [availability], {availability.key: "available"})
+    )
+
+    assert '<td align="left">' in html
+    assert '<td align="left"><mark>' in html
 
 
 def test_degradation_and_recovery_are_told_apart():

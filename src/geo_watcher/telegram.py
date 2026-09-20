@@ -129,18 +129,22 @@ def _rows(changes: list[Change], *, custom: bool) -> str:
     rows = "".join(
         "<tr>"
         f"<td>{_name(change.observation, custom=custom)}</td>"
-        f'<td align="center">'
+        f'<td align="{_value_align(change.observation)}">'
         f"{_value(change.observation, change.previous, custom=custom)}</td>"
-        f'<td align="center"><mark>'
+        f'<td align="{_value_align(change.observation)}"><mark>'
         f"{_value(change.observation, change.current, custom=custom)}</mark>"
         "</td></tr>"
         for change in changes
     )
     return (
         "<table bordered striped compact>"
-        "<tr><th>Проверка</th><th>Было</th><th>Стало</th></tr>"
+        "<tr><th>Check</th><th>Before</th><th>Now</th></tr>"
         f"{rows}</table>"
     )
+
+
+def _value_align(observation: Observation) -> str:
+    return "center" if observation.kind is CheckKind.COUNTRY else "left"
 
 
 def _section(title: str, changes: list[Change], *, custom: bool) -> str:
@@ -160,9 +164,9 @@ def _snapshot(observations: list[Observation], *, custom: bool) -> str:
         for o in shown
     )
     hidden = len(observations) - len(shown)
-    tail = f"<footer>и ещё {hidden}</footer>" if hidden else ""
+    tail = f"<footer>and {hidden} more</footer>" if hidden else ""
     return (
-        f"<details><summary>Все проверки ноды ({len(observations)})</summary>"
+        f"<details><summary>All checks ({len(observations)})</summary>"
         f"<table striped compact>{rows}</table>{tail}</details>"
     )
 
@@ -176,12 +180,12 @@ def format_html(result: NodeReport, *, custom_emoji: bool = True) -> str:
         c for c in result.changes if c.observation.kind is not CheckKind.COUNTRY
     ]
 
-    geo_title = f"{emoji.GEO.html(custom=custom)} География"
-    access_title = f"{emoji.AVAILABILITY.html(custom=custom)} Доступность"
+    geo_title = f"{emoji.GEO.html(custom=custom)} Geography"
+    access_title = f"{emoji.AVAILABILITY.html(custom=custom)} Availability"
     body = (
         f"<h3>{_icon(result.changes, custom=custom)} "
         f"{escape(result.node_name)}</h3>"
-        f'<p><tg-time unix="{int(time.time())}" format="r">сейчас'
+        f'<p><tg-time unix="{int(time.time())}" format="r">just now'
         f"</tg-time></p>"
         f"{_section(geo_title, countries, custom=custom)}"
         f"{_section(access_title, availability, custom=custom)}"
