@@ -1,0 +1,29 @@
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: "v6.0.0"
+    hooks:
+      - id: "trailing-whitespace"
+      - id: "check-case-conflict"
+      - id: "check-merge-conflict"
+      - id: "end-of-file-fixer"
+      - id: "check-toml"
+      - id: "check-yaml"
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: "v0.16.2"
+    hooks:
+      - id: ruff-format
+        name: Ruff formatting
+      - id: ruff
+        name: Ruff linting
+        args: [ --fix ]
+
+  - repo: local
+    hooks:
+      - id: mypy
+        name: mypy
+        entry: mypy
+        language: system
+        types: [ python ]
+        args: [ --follow-imports=silent ]
+        files: src/

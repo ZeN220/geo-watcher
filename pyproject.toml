@@ -1,0 +1,61 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "geo-watcher"
+version = "1.0.0"
+description = "Следит, у каких сервисов меняется гео нод Remnawave"
+requires-python = ">=3.13"
+dependencies = [
+    "adaptix>=3.0.0b12",
+    "httpx>=0.28.1",
+    "remnawave-client==3.4.4.1",
+]
+
+[project.scripts]
+geo-watcher = "geo_watcher.__main__:main"
+
+[dependency-groups]
+dev = [
+    "mypy>=2.3.0",
+    "pre-commit>=4.6.2",
+    "pytest>=9.1.1",
+    "pytest-asyncio>=1.4.0",
+    "ruff>=0.16.2",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = ["--import-mode=importlib"]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+
+[tool.ruff]
+line-length = 80
+
+[tool.ruff.lint]
+select = ["ALL"]
+ignore = [
+    "D",
+    "TD",
+    "EM101",
+    "EM102",
+    "ANN201",
+    "ANN202",
+    "ANN204",
+    "TRY003",
+    "RUF001",
+    "RUF002",
+    "RUF003",
+    "ANN401",
+    "CPY001",
+    "PLR0913",
+    "PLR0917",
+    "FIX002",
+    "COM812",
+]
+
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["F401"]
+"tests/**/*.py" = ["INP001", "PLR2004", "S101"]

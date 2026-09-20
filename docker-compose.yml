@@ -1,0 +1,9 @@
+name: geo_watcher
+
+services:
+  watcher:
+    build: .
+    restart: "unless-stopped"
+    volumes:
+      - ./config.toml:/config.toml:ro
+      - ./data:/app/data
