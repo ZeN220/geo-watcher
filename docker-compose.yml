@@ -2,7 +2,7 @@ name: geo_watcher
 
 services:
   watcher:
-    image: ghcr.io/zen220/geo-watcher:latest
+    image: ghcr.io/zen220/geo-watcher:1
     restart: "unless-stopped"
     volumes:
       - ./config.toml:/config.toml:ro
