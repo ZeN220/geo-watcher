@@ -63,7 +63,6 @@ message_thread_id = 42
 
 [watcher]
 interval = 3600
-concurrency = 3
 sources = ["services", "geoip", "stash"]
 state_file = "state.json"
 
@@ -99,7 +98,6 @@ Telegram Premium on the account that owns the bot.
 | Option | Default | Description |
 | --- | --- | --- |
 | `interval` | `3600` | Delay between runs, in seconds. |
-| `concurrency` | `3` | Maximum number of geocheck jobs running at the same time. |
 | `sources` | `services`, `geoip`, `stash` | Report sections from geocheck to monitor. |
 | `state_file` | `state.json` | File containing the latest known value of every check. Relative paths are resolved from the working directory. |
 

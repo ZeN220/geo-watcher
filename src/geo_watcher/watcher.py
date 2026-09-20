@@ -11,6 +11,8 @@ from geo_watcher.telegram import Notifier
 
 logger = logging.getLogger(__name__)
 
+MAX_CONCURRENT_CHECKS = 3
+
 
 class GeoWatcher:
     def __init__(
@@ -19,13 +21,12 @@ class GeoWatcher:
         store: StateStore,
         notifier: Notifier,
         sources: list[Source],
-        concurrency: int,
     ):
         self._geocheck = geocheck
         self._store = store
         self._notifier = notifier
         self._sources = sources
-        self._semaphore = asyncio.Semaphore(concurrency)
+        self._semaphore = asyncio.Semaphore(MAX_CONCURRENT_CHECKS)
 
     async def check_access(self) -> None:
         await self._geocheck.check_access()

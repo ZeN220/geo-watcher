@@ -36,7 +36,6 @@ class Telegram:
 @dataclass
 class Watcher:
     interval: int = 3600
-    concurrency: int = 3
     sources: list[Source] = field(
         default_factory=lambda: [Source.SERVICES, Source.GEOIP, Source.STASH],
     )

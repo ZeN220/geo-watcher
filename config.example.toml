@@ -10,8 +10,6 @@ custom_emoji = true # Requires TG Premium from the bot creator
 
 [watcher]
 interval = 3600
-concurrency = 3
-
 sources = ["services", "geoip", "stash"]  # Excluded CDN
 state_file = "data/state.json"
 

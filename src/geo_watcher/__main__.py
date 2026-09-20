@@ -78,7 +78,6 @@ async def run(config: Config, *, once: bool) -> None:
             store=StateStore(config.watcher.state_file),
             notifier=create_notifier(config, http),
             sources=config.watcher.sources,
-            concurrency=config.watcher.concurrency,
         )
         try:
             await watcher.check_access()
