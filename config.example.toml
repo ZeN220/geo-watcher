@@ -12,8 +12,8 @@ custom_emoji = true # Requires TG Premium from the bot creator
 interval = 3600
 concurrency = 3
 
-sources = ["services", "geoip", "stash"]
-state_file = "state.json"
+sources = ["services", "geoip", "stash"]  # Excluded CDN
+state_file = "data/state.json"
 
 [logging]
 level = 20
