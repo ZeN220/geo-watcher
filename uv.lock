@@ -160,7 +160,7 @@ dev = [
 requires-dist = [
     { name = "adaptix", specifier = ">=3.0.0b12" },
     { name = "httpx", specifier = ">=0.28.1" },
-    { name = "remnawave-client", specifier = "==3.4.4.1" },
+    { name = "remnawave-client", specifier = "==3.4.4.*" },
 ]
 
 [package.metadata.requires-dev]
@@ -559,15 +559,15 @@ wheels = [
 
 [[package]]
 name = "remnawave-client"
-version = "3.4.4.1"
+version = "3.4.4.2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "adaptix" },
     { name = "httpx" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/67/07/801495b853b7966176b0b07201c44549562195cecd816a8676375ff758c8/remnawave_client-3.4.4.1.tar.gz", hash = "sha256:4d52dae4904e55b41cb462b3c776ae82e3919ba60c48e5b6c4c7469d84c8277b", size = 42227, upload-time = "2026-09-19T14:36:41.837Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/73/8e/fc4a035a82a7a160838d1c5d4471a4b3a056c4bda424c40bde555515f618/remnawave_client-3.4.4.2.tar.gz", hash = "sha256:bd9dce35b63e385ab17941661fddc9dc6d1f0c4c3839e32554e77cf93b0e45a6", size = 42256, upload-time = "2026-09-20T17:56:29.935Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/50/27/943556e51cb5404a8940b3f0e59585dcfc249dd4c24defe66333fe367c3b/remnawave_client-3.4.4.1-py3-none-any.whl", hash = "sha256:1ca16dc7f1f8af5dd4c12ce1482c5a49747326cd42f7b01f08c271353eefe934", size = 66140, upload-time = "2026-09-19T14:36:40.865Z" },
+    { url = "https://files.pythonhosted.org/packages/13/89/f3d507c5d8593bac4ca750d601e34005916c2e945aae7b0e0821e73789d4/remnawave_client-3.4.4.2-py3-none-any.whl", hash = "sha256:b78e227a4d215a94b60e5ea98001d0b6ba28bebeed53b585fb6f4da37e1e79c6", size = 66153, upload-time = "2026-09-20T17:56:29.022Z" },
 ]
 
 [[package]]
