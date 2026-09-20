@@ -61,6 +61,7 @@ def create_notifier(config: Config, client: httpx.AsyncClient) -> Notifier:
         bot_token=config.telegram.bot_token,
         chat_id=config.telegram.chat_id,
         message_thread_id=config.telegram.message_thread_id,
+        custom_emoji=config.telegram.custom_emoji,
     )
 
 

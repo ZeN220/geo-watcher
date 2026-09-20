@@ -5,6 +5,7 @@ from typing import Protocol
 
 import httpx
 
+from geo_watcher import emoji
 from geo_watcher.analysis import Change, NodeReport
 from geo_watcher.report import CheckKind, Observation
 
@@ -24,7 +25,7 @@ RANKS = {
     "no": 2,
     "blocked": 2,
 }
-STATE_ICONS = {0: "🟢", 1: "🟡", 2: "🔴"}
+STATE_ICONS = {0: emoji.GOOD, 1: emoji.WARN, 2: emoji.BAD}
 
 
 class Notifier(Protocol):
@@ -43,17 +44,20 @@ class TelegramNotifier:
         bot_token: str,
         chat_id: int | str,
         message_thread_id: int | None = None,
+        *,
+        custom_emoji: bool = True,
     ) -> None:
         self._client = client
         self._url = API_URL.format(token=bot_token)
         self._chat_id = chat_id
         self._message_thread_id = message_thread_id
+        self._custom_emoji = custom_emoji
 
     async def notify(self, result: NodeReport) -> None:
         payload: dict[str, object] = {
             "chat_id": self._chat_id,
             "rich_message": {
-                "html": format_html(result),
+                "html": format_html(result, custom_emoji=self._custom_emoji),
                 "skip_entity_detection": True,
             },
             "disable_notification": not _has_degradation(result.changes),
@@ -95,38 +99,41 @@ def _flag(code: str) -> str:
     return "".join(chr(0x1F1E6 + ord(letter) - ord("A")) for letter in code)
 
 
-def _value(observation: Observation, value: str) -> str:
+def _value(observation: Observation, value: str, *, custom: bool) -> str:
     if observation.kind is CheckKind.COUNTRY:
         flag = _flag(value)
         return f"{flag} {escape(value)}" if flag else escape(value)
-    icon = STATE_ICONS[_rank(observation.kind, value)]
+    icon = STATE_ICONS[_rank(observation.kind, value)].html(custom=custom)
     return f"{icon} {escape(value)}"
 
 
-def _name(observation: Observation) -> str:
+def _name(observation: Observation, *, custom: bool) -> str:
     name = escape(observation.name)
+    logo = emoji.SERVICES.get(observation.id)
+    if logo is not None:
+        name = f"{logo.html(custom=custom)} {name}"
     if observation.family is None:
         return name
     return f"{name} <sup>{observation.family.value}</sup>"
 
 
-def _icon(changes: list[Change]) -> str:
+def _icon(changes: list[Change], *, custom: bool) -> str:
     if any(_severity(change) > 0 for change in changes):
-        return "🔴"
+        return emoji.BAD.html(custom=custom)
     if any(_severity(change) < 0 for change in changes):
-        return "🟢"
-    return "🌍"
+        return emoji.GOOD.html(custom=custom)
+    return emoji.GEO.html(custom=custom)
 
 
-def _rows(changes: list[Change]) -> str:
+def _rows(changes: list[Change], *, custom: bool) -> str:
     rows = "".join(
         "<tr>"
-        f"<td>{_name(change.observation)}</td>"
+        f"<td>{_name(change.observation, custom=custom)}</td>"
         f'<td align="center">'
-        f"{_value(change.observation, change.previous)}</td>"
+        f"{_value(change.observation, change.previous, custom=custom)}</td>"
         f'<td align="center"><mark>'
-        f"{_value(change.observation, change.current)}</mark></td>"
-        "</tr>"
+        f"{_value(change.observation, change.current, custom=custom)}</mark>"
+        "</td></tr>"
         for change in changes
     )
     return (
@@ -136,19 +143,19 @@ def _rows(changes: list[Change]) -> str:
     )
 
 
-def _section(title: str, changes: list[Change]) -> str:
+def _section(title: str, changes: list[Change], *, custom: bool) -> str:
     if not changes:
         return ""
-    return f"<h4>{title}</h4>{_rows(changes)}"
+    return f"<h4>{title}</h4>{_rows(changes, custom=custom)}"
 
 
-def _snapshot(observations: list[Observation]) -> str:
+def _snapshot(observations: list[Observation], *, custom: bool) -> str:
     shown = observations[:SNAPSHOT_LIMIT]
     rows = "".join(
         "<tr>"
-        f"<td>{_name(o)}</td>"
+        f"<td>{_name(o, custom=custom)}</td>"
         f"<td>{escape(o.source.value)}</td>"
-        f'<td align="center">{_value(o, o.value)}</td>'
+        f'<td align="center">{_value(o, o.value, custom=custom)}</td>'
         "</tr>"
         for o in shown
     )
@@ -160,7 +167,8 @@ def _snapshot(observations: list[Observation]) -> str:
     )
 
 
-def format_html(result: NodeReport) -> str:
+def format_html(result: NodeReport, *, custom_emoji: bool = True) -> str:
+    custom = custom_emoji
     countries = [
         c for c in result.changes if c.observation.kind is CheckKind.COUNTRY
     ]
@@ -168,14 +176,17 @@ def format_html(result: NodeReport) -> str:
         c for c in result.changes if c.observation.kind is not CheckKind.COUNTRY
     ]
 
+    geo_title = f"{emoji.GEO.html(custom=custom)} География"
+    access_title = f"{emoji.AVAILABILITY.html(custom=custom)} Доступность"
     body = (
-        f"<h3>{_icon(result.changes)} {escape(result.node_name)}</h3>"
+        f"<h3>{_icon(result.changes, custom=custom)} "
+        f"{escape(result.node_name)}</h3>"
         f'<p><tg-time unix="{int(time.time())}" format="r">сейчас'
         f"</tg-time></p>"
-        f"{_section('🌍 География', countries)}"
-        f"{_section('📺 Доступность', availability)}"
+        f"{_section(geo_title, countries, custom=custom)}"
+        f"{_section(access_title, availability, custom=custom)}"
     )
-    snapshot = _snapshot(result.observations)
+    snapshot = _snapshot(result.observations, custom=custom)
     if len(body) + len(snapshot) <= MAX_LENGTH:
         body += snapshot
     return body[:MAX_LENGTH]

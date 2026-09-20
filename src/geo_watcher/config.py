@@ -30,6 +30,7 @@ class Telegram:
     bot_token: str
     chat_id: int | str
     message_thread_id: int | None = None
+    custom_emoji: bool = True
 
 
 @dataclass

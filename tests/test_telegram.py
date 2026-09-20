@@ -1,6 +1,11 @@
+from geo_watcher import emoji
 from geo_watcher.analysis import analyze
 from geo_watcher.report import CheckKind, Family, Observation, Source
-from geo_watcher.telegram import MAX_LENGTH, _has_degradation, format_html
+from geo_watcher.telegram import (
+    MAX_LENGTH,
+    _has_degradation,
+    format_html,
+)
 
 
 def _country(check_id: str, value: str) -> Observation:
@@ -35,8 +40,8 @@ def test_country_change_renders_flags_and_escapes_names():
     assert "&lt;google&gt;" in html
     assert "🇳🇱 NL" in html
     assert "<mark>🇷🇺 RU</mark>" in html
-    assert "<h4>🌍 География</h4>" in html
-    assert "<h4>📺 Доступность</h4>" not in html
+    assert "</tg-emoji> География</h4>" in html
+    assert "Доступность</h4>" not in html
 
 
 def test_degradation_and_recovery_are_told_apart():
@@ -75,3 +80,32 @@ def test_snapshot_is_dropped_when_message_is_too_long():
 
     assert len(html) <= MAX_LENGTH
     assert "<details>" not in html
+
+
+def test_custom_emoji_are_used_for_states_and_service_logos():
+    netflix = Observation(
+        source=Source.STASH,
+        id="netflix_access",
+        name="Netflix",
+        kind=CheckKind.AVAILABILITY,
+        family=None,
+        value="blocked",
+    )
+
+    html = format_html(analyze("nl-1", [netflix], {netflix.key: "available"}))
+
+    assert f'<tg-emoji emoji-id="{emoji.BAD.id}">🔴</tg-emoji>' in html
+    assert f'<tg-emoji emoji-id="{emoji.SERVICES["netflix_access"].id}"' in html
+    assert f'<tg-emoji emoji-id="{emoji.AVAILABILITY.id}">' in html
+
+
+def test_custom_emoji_can_be_turned_off():
+    stash = _stash("chatgpt_web", "blocked")
+
+    html = format_html(
+        analyze("nl-1", [stash], {stash.key: "available"}),
+        custom_emoji=False,
+    )
+
+    assert "<tg-emoji" not in html
+    assert "🔴" in html

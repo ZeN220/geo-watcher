@@ -5,6 +5,7 @@ token = "your-api-token-here"
 [telegram]
 bot_token = "1234567890:ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 chat_id = 123456789
+custom_emoji = true # Requires TG Premium from the bot creator
 # message_thread_id = 42
 
 [watcher]
