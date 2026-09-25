@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import time
 
 from remnawave.types import Node
 
@@ -33,7 +34,11 @@ class GeoWatcher:
 
     async def run_once(self) -> list[NodeReport]:
         nodes = await self._geocheck.get_active_nodes()
-        logger.info("Checking %d nodes", len(nodes))
+        logger.info(
+            "Checking %d nodes: %s",
+            len(nodes),
+            ", ".join(node.name for node in nodes) or "none",
+        )
 
         state = self._store.load()
         results = await asyncio.gather(
@@ -48,11 +53,18 @@ class GeoWatcher:
         state: State,
     ) -> NodeReport | None:
         async with self._semaphore:
+            logger.debug("Node %s: geocheck started", node.name)
+            started = time.monotonic()
             try:
                 report = await self._geocheck.run(node)
             except Exception:
                 logger.exception("Node %s: geocheck failed", node.name)
                 return None
+            logger.debug(
+                "Node %s: geocheck finished in %.1f s",
+                node.name,
+                time.monotonic() - started,
+            )
 
         key = str(node.uuid)
         previous = state.get(key, {})
@@ -75,12 +87,19 @@ def log_result(result: NodeReport) -> None:
         logger.warning("Node %s: no checks in the report", result.node_name)
         return
 
-    if result.changes:
-        logger.warning(
-            "Node %s: checks changed since the last run:\n%s",
+    if not result.changes:
+        logger.info(
+            "Node %s: no changes in %d checks",
             result.node_name,
-            "\n".join(
-                f"  - {c.observation.label}: {c.previous} → {c.current}"
-                for c in result.changes
-            ),
+            len(result.observations),
         )
+        return
+
+    logger.warning(
+        "Node %s: checks changed since the last run:\n%s",
+        result.node_name,
+        "\n".join(
+            f"  - {c.observation.label}: {c.previous} → {c.current}"
+            for c in result.changes
+        ),
+    )

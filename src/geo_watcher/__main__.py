@@ -79,6 +79,11 @@ async def run(config: Config, *, once: bool) -> None:
             notifier=create_notifier(config, http),
             sources=config.watcher.sources,
         )
+        logger.info(
+            "Starting geo-watcher %s with sources: %s",
+            version("geo-watcher"),
+            ", ".join(config.watcher.sources),
+        )
         try:
             await watcher.check_access()
         except AccessError as error:

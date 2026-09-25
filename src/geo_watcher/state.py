@@ -13,14 +13,17 @@ class StateStore:
 
     def load(self) -> State:
         if not self._path.exists():
+            logger.debug("%s does not exist, starting from scratch", self._path)
             return {}
         try:
-            return json.loads(self._path.read_text(encoding="utf-8"))
+            state = json.loads(self._path.read_text(encoding="utf-8"))
         except (OSError, json.JSONDecodeError):
             logger.exception(
                 "Failed to read %s, starting from scratch", self._path
             )
             return {}
+        logger.debug("Loaded state of %d nodes from %s", len(state), self._path)
+        return state
 
     def save(self, state: State) -> None:
         self._path.parent.mkdir(parents=True, exist_ok=True)
@@ -30,3 +33,4 @@ class StateStore:
             encoding="utf-8",
         )
         tmp.replace(self._path)
+        logger.debug("Saved state of %d nodes to %s", len(state), self._path)

@@ -54,10 +54,11 @@ class TelegramNotifier:
         self._custom_emoji = custom_emoji
 
     async def notify(self, result: NodeReport) -> None:
+        html = format_html(result, custom_emoji=self._custom_emoji)
         payload: dict[str, object] = {
             "chat_id": self._chat_id,
             "rich_message": {
-                "html": format_html(result, custom_emoji=self._custom_emoji),
+                "html": html,
                 "skip_entity_detection": True,
             },
             "disable_notification": not _has_degradation(result.changes),
@@ -72,6 +73,12 @@ class TelegramNotifier:
                 response.status_code,
                 response.text,
             )
+            return
+        logger.debug(
+            "Node %s: notification sent (%d chars)",
+            result.node_name,
+            len(html),
+        )
 
 
 def _rank(kind: CheckKind, value: str) -> int:
