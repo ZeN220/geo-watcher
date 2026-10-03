@@ -12,6 +12,7 @@ from remnawave.exceptions import (
 )
 from remnawave.types import GeocheckByNodeBody, GeocheckByNodeResultResult
 
+from geo_watcher.config import Geocheck
 from geo_watcher.remnawave import (
     JOB_TIMEOUT,
     POLL_INTERVAL,
@@ -28,22 +29,27 @@ class StubConnections:
     def __init__(self, result: GeocheckByNodeResultResult) -> None:
         self.result = result
         self.calls: list[tuple[UUID, float, float | None]] = []
+        self.bodies: list[GeocheckByNodeBody] = []
 
     async def wait_geocheck_by_node(
         self,
         node_uuid: UUID,
-        body: GeocheckByNodeBody,  # noqa: ARG002
+        body: GeocheckByNodeBody,
         *,
         interval: float,
         timeout: float | None,  # noqa: ASYNC109 — сигнатура клиента
     ) -> GeocheckByNodeResultResult:
         self.calls.append((node_uuid, interval, timeout))
+        self.bodies.append(body)
         return self.result
 
 
-def _geocheck(connections: StubConnections) -> RemnawaveGeocheck:
+def _geocheck(
+    connections: StubConnections,
+    settings: Geocheck | None = None,
+) -> RemnawaveGeocheck:
     sdk = cast("Any", SimpleNamespace(connections=connections))
-    return RemnawaveGeocheck(sdk)
+    return RemnawaveGeocheck(sdk, settings)
 
 
 def _result(
@@ -68,6 +74,37 @@ async def test_run_returns_raw_report_and_passes_timings():
 
     assert report == GeocheckReport(schema=1)
     assert connections.calls == [(NODE.uuid, POLL_INTERVAL, JOB_TIMEOUT)]
+    assert connections.bodies == [GeocheckByNodeBody()]
+
+
+@pytest.mark.parametrize(
+    ("settings", "body"),
+    [
+        (Geocheck(interface="eth0"), GeocheckByNodeBody(interface="eth0")),
+        (
+            Geocheck(interface="eth0", node_interfaces={"nl-1": "wg0"}),
+            GeocheckByNodeBody(interface="wg0"),
+        ),
+        (
+            Geocheck(interface="203.0.113.7"),
+            GeocheckByNodeBody(ip="203.0.113.7"),
+        ),
+        (
+            Geocheck(interface="2001:db8::1"),
+            GeocheckByNodeBody(ip="2001:db8::1"),
+        ),
+        (Geocheck(node_interfaces={"de-1": "wg0"}), GeocheckByNodeBody()),
+    ],
+)
+async def test_run_binds_to_configured_interface_or_ip(
+    settings: Geocheck,
+    body: GeocheckByNodeBody,
+):
+    connections = StubConnections(_result(raw_report={"schema": 1}))
+
+    await _geocheck(connections, settings).run(NODE)
+
+    assert connections.bodies == [body]
 
 
 async def test_run_raises_when_not_successful():

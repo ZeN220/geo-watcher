@@ -1,3 +1,4 @@
+import ipaddress
 import logging
 
 from remnawave import AsyncRemnawave
@@ -9,6 +10,7 @@ from remnawave.exceptions import (
 )
 from remnawave.types import GeocheckByNodeBody, Node
 
+from geo_watcher.config import Geocheck
 from geo_watcher.report import GeocheckReport, load_report
 
 logger = logging.getLogger(__name__)
@@ -26,8 +28,9 @@ class AccessError(Exception):
 
 
 class RemnawaveGeocheck:
-    def __init__(self, sdk: AsyncRemnawave):
+    def __init__(self, sdk: AsyncRemnawave, settings: Geocheck | None = None):
         self._sdk = sdk
+        self._settings = settings or Geocheck()
 
     async def check_access(self) -> None:
         try:
@@ -60,9 +63,15 @@ class RemnawaveGeocheck:
         return active
 
     async def run(self, node: Node) -> GeocheckReport:
+        bind_to = self._settings.interface_for(node.name)
+        logger.debug(
+            "Node %s: geocheck bound to %s",
+            node.name,
+            bind_to or "default route",
+        )
         result = await self._sdk.connections.wait_geocheck_by_node(
             node.uuid,
-            GeocheckByNodeBody(),
+            _geocheck_body(bind_to),
             interval=POLL_INTERVAL,
             timeout=JOB_TIMEOUT,
         )
@@ -72,3 +81,13 @@ class RemnawaveGeocheck:
             raise GeocheckError("empty raw_report")
         logger.debug("Node %s: raw report %s", node.name, result.raw_report)
         return load_report(result.raw_report)
+
+
+def _geocheck_body(bind_to: str | None) -> GeocheckByNodeBody:
+    if bind_to is None:
+        return GeocheckByNodeBody()
+    try:
+        ipaddress.ip_address(bind_to)
+    except ValueError:
+        return GeocheckByNodeBody(interface=bind_to)
+    return GeocheckByNodeBody(ip=bind_to)

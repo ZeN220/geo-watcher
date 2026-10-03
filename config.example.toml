@@ -13,6 +13,15 @@ interval = 3600
 sources = ["services", "geoip", "stash"]  # Excluded CDN
 state_file = "data/state.json"
 
+[geocheck]
+# interface = "eth0"  # Interface name or local IP on every node
+
+# [geocheck.node_interfaces]  # Per-node overrides by node name or glob
+# "nl-*" = "ens3"
+# "nl-1" = "wg0"
+# "de-1" = "203.0.113.7"  # Outgoing IP: must be assigned to an interface on the node
+# "nl-2" = ""  # An empty string indicates the default route and ignores the global interface
+
 [logging]
 level = 20
 format = "[%(levelname)s] %(asctime)s - %(name)s - %(message)s"

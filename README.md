@@ -76,6 +76,14 @@ interval = 3600
 sources = ["services", "geoip", "stash"]
 state_file = "state.json"
 
+[geocheck]
+interface = "eth0"
+
+[geocheck.node_interfaces]
+"nl-*" = "ens3"
+"nl-1" = "wg0"
+"de-1" = "203.0.113.7"
+
 [logging]
 level = 20
 format = "[%(levelname)s] %(asctime)s - %(name)s - %(message)s"
@@ -119,6 +127,24 @@ Supported sources:
 | `geoip` | Country results from GeoIP providers. |
 | `cdn` | Country results reported by CDN endpoints. |
 | `stash` | Availability and regional access checks from the geocheck stash. |
+
+### Geocheck
+
+The entire `[geocheck]` section is optional. Without it, geocheck runs over
+the node's default route.
+
+| Option | Default | Description |
+| --- | --- | --- |
+| `interface` | None | Network interface name or local IP address that geocheck binds all traffic to on every node. IP addresses are sent to Remnawave as `ip`, anything else as `interface`. |
+| `node_interfaces` | Empty | Per-node overrides of `interface`, keyed by node name or a glob pattern such as `"nl-*"`. |
+
+An exact node name takes precedence over patterns; among patterns, the first
+match in the file wins. Matching is case-sensitive and supports `*`, `?` and
+`[...]`. To check a node from a specific outgoing IP, set that address instead of an
+interface name; it must be assigned to one of the node's interfaces. An empty
+string means no binding: geocheck uses the node's default
+route. Use it in `node_interfaces` to opt a node out of the global
+`interface`. The interface must exist on the node where geocheck runs.
 
 ### Logging
 

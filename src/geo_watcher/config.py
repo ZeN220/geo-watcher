@@ -1,6 +1,7 @@
 import tomllib
 from collections.abc import Iterator
 from dataclasses import dataclass, field
+from fnmatch import fnmatchcase
 from pathlib import Path
 
 from adaptix import Retort
@@ -43,6 +44,26 @@ class Watcher:
 
 
 @dataclass
+class Geocheck:
+    interface: str | None = None
+    node_interfaces: dict[str, str] = field(default_factory=dict)
+
+    def interface_for(self, node_name: str) -> str | None:
+        interface = self._lookup(node_name)
+        if interface is None:
+            return None
+        return interface.strip() or None
+
+    def _lookup(self, node_name: str) -> str | None:
+        if node_name in self.node_interfaces:
+            return self.node_interfaces[node_name]
+        for pattern, interface in self.node_interfaces.items():
+            if fnmatchcase(node_name, pattern):
+                return interface
+        return self.interface
+
+
+@dataclass
 class Logging:
     level: int = 20
     format: str = "[%(levelname)s] %(asctime)s - %(name)s - %(message)s"
@@ -55,6 +76,7 @@ _retort = Retort()
 class Config:
     remnawave: Remnawave
     watcher: Watcher = field(default_factory=Watcher)
+    geocheck: Geocheck = field(default_factory=Geocheck)
     logging: Logging = field(default_factory=Logging)
     telegram: Telegram | None = None
 

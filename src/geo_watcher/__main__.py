@@ -74,7 +74,7 @@ async def run(config: Config, *, once: bool) -> None:
         httpx.AsyncClient(timeout=30) as http,
     ):
         watcher = GeoWatcher(
-            geocheck=RemnawaveGeocheck(sdk),
+            geocheck=RemnawaveGeocheck(sdk, config.geocheck),
             store=StateStore(config.watcher.state_file),
             notifier=create_notifier(config, http),
             sources=config.watcher.sources,
