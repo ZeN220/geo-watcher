@@ -16,9 +16,11 @@ from geo_watcher.config import Geocheck
 from geo_watcher.remnawave import (
     JOB_TIMEOUT,
     POLL_INTERVAL,
+    PROXY_HEADERS,
     AccessError,
     GeocheckError,
     RemnawaveGeocheck,
+    panel_headers,
 )
 from geo_watcher.report import GeocheckReport
 
@@ -162,3 +164,15 @@ async def test_check_access_reports_invalid_token():
 async def test_check_access_reports_connection_failure(error: Exception):
     with pytest.raises(AccessError, match="check the configured base_url"):
         await _with_nodes(StubNodes(error)).check_access()
+
+
+@pytest.mark.parametrize(
+    ("base_url", "expected"),
+    [
+        ("http://remnawave:3000", PROXY_HEADERS),
+        ("HTTP://remnawave:3000", PROXY_HEADERS),
+        ("https://panel.example.com", {}),
+    ],
+)
+def test_panel_headers(base_url: str, expected: dict[str, str]) -> None:
+    assert panel_headers(base_url) == expected

@@ -12,10 +12,9 @@ from collections.abc import Sequence
 from importlib.metadata import version
 
 import httpx
-from remnawave import AsyncRemnawave
 
 from geo_watcher.config import Config, ConfigError
-from geo_watcher.remnawave import AccessError, RemnawaveGeocheck
+from geo_watcher.remnawave import AccessError, RemnawaveGeocheck, create_sdk
 from geo_watcher.state import StateStore
 from geo_watcher.telegram import Notifier, NullNotifier, TelegramNotifier
 from geo_watcher.watcher import GeoWatcher
@@ -67,10 +66,7 @@ def create_notifier(config: Config, client: httpx.AsyncClient) -> Notifier:
 
 async def run(config: Config, *, once: bool) -> None:
     async with (
-        AsyncRemnawave(
-            base_url=config.remnawave.base_url,
-            token=config.remnawave.token,
-        ) as sdk,
+        create_sdk(config.remnawave.base_url, config.remnawave.token) as sdk,
         httpx.AsyncClient(timeout=30) as http,
     ):
         watcher = GeoWatcher(

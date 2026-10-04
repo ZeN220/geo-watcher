@@ -1,6 +1,8 @@
 import ipaddress
 import logging
+from urllib.parse import urlsplit
 
+import httpx
 from remnawave import AsyncRemnawave
 from remnawave.exceptions import (
     ForbiddenError,
@@ -8,6 +10,7 @@ from remnawave.exceptions import (
     RequestTimeoutError,
     UnauthorizedError,
 )
+from remnawave.http import HttpxAsync
 from remnawave.types import GeocheckByNodeBody, Node
 
 from geo_watcher.config import Geocheck
@@ -18,6 +21,12 @@ logger = logging.getLogger(__name__)
 POLL_INTERVAL = 1
 JOB_TIMEOUT = 60
 
+# For HTTP requests
+PROXY_HEADERS = {
+    "X-Forwarded-Proto": "https",
+    "X-Forwarded-For": "127.0.0.1",
+}
+
 
 class GeocheckError(Exception):
     pass
@@ -25,6 +34,22 @@ class GeocheckError(Exception):
 
 class AccessError(Exception):
     pass
+
+
+def create_sdk(base_url: str, token: str) -> AsyncRemnawave:
+    return AsyncRemnawave(
+        base_url=base_url,
+        token=token,
+        transport=HttpxAsync(
+            httpx.AsyncClient(headers=panel_headers(base_url)),
+        ),
+    )
+
+
+def panel_headers(base_url: str) -> dict[str, str]:
+    if urlsplit(base_url).scheme.lower() == "http":
+        return dict(PROXY_HEADERS)
+    return {}
 
 
 class RemnawaveGeocheck:
