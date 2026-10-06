@@ -1,5 +1,6 @@
 import ipaddress
 import logging
+import re
 from urllib.parse import urlsplit
 
 import httpx
@@ -20,6 +21,9 @@ logger = logging.getLogger(__name__)
 
 POLL_INTERVAL = 1
 JOB_TIMEOUT = 60
+
+# First Remnawave Node release with geocheck support
+MIN_NODE_VERSION = (3, 3, 0)
 
 # For HTTP requests
 PROXY_HEADERS = {
@@ -76,15 +80,24 @@ class RemnawaveGeocheck:
         nodes = await self._sdk.nodes.get_nodes()
         active: list[Node] = []
         for node in nodes:
-            if node.is_connected and not node.is_disabled:
-                active.append(node)
+            if not node.is_connected or node.is_disabled:
+                logger.debug(
+                    "Node %s: skipped (connected=%s, disabled=%s)",
+                    node.name,
+                    node.is_connected,
+                    node.is_disabled,
+                )
                 continue
-            logger.debug(
-                "Node %s: skipped (connected=%s, disabled=%s)",
-                node.name,
-                node.is_connected,
-                node.is_disabled,
-            )
+            if not supports_geocheck(node):
+                logger.warning(
+                    "Node %s: skipped, node version %s does not support "
+                    "geocheck (requires %s+)",
+                    node.name,
+                    node.versions.node if node.versions else "unknown",
+                    ".".join(map(str, MIN_NODE_VERSION)),
+                )
+                continue
+            active.append(node)
         return active
 
     async def run(self, node: Node) -> GeocheckReport:
@@ -106,6 +119,22 @@ class RemnawaveGeocheck:
             raise GeocheckError("empty raw_report")
         logger.debug("Node %s: raw report %s", node.name, result.raw_report)
         return load_report(result.raw_report)
+
+
+def supports_geocheck(node: Node) -> bool:
+    if node.versions is None:
+        return True
+    version = _parse_version(node.versions.node)
+    if version is None:
+        return True
+    return version >= MIN_NODE_VERSION
+
+
+def _parse_version(raw: str) -> tuple[int, ...] | None:
+    match = re.match(r"v?(\d+)\.(\d+)(?:\.(\d+))?", raw.strip())
+    if match is None:
+        return None
+    return tuple(int(part or 0) for part in match.groups())
 
 
 def _geocheck_body(bind_to: str | None) -> GeocheckByNodeBody:

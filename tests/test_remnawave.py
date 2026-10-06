@@ -21,6 +21,7 @@ from geo_watcher.remnawave import (
     GeocheckError,
     RemnawaveGeocheck,
     panel_headers,
+    supports_geocheck,
 )
 from geo_watcher.report import GeocheckReport
 
@@ -126,13 +127,18 @@ async def test_run_raises_on_empty_report():
 
 
 class StubNodes:
-    def __init__(self, error: Exception | None = None) -> None:
+    def __init__(
+        self,
+        error: Exception | None = None,
+        nodes: list[Any] | None = None,
+    ) -> None:
         self.error = error
+        self.nodes = nodes or []
 
     async def get_nodes(self) -> list[Any]:
         if self.error is not None:
             raise self.error
-        return []
+        return self.nodes
 
 
 def _with_nodes(nodes: StubNodes) -> RemnawaveGeocheck:
@@ -176,3 +182,52 @@ async def test_check_access_reports_connection_failure(error: Exception):
 )
 def test_panel_headers(base_url: str, expected: dict[str, str]) -> None:
     assert panel_headers(base_url) == expected
+
+
+def _node(
+    name: str,
+    version: str | None = "3.4.0",
+    *,
+    connected: bool = True,
+    disabled: bool = False,
+) -> Any:
+    versions = None
+    if version is not None:
+        versions = SimpleNamespace(node=version, xray="25.10.15")
+    return SimpleNamespace(
+        name=name,
+        is_connected=connected,
+        is_disabled=disabled,
+        versions=versions,
+    )
+
+
+async def test_get_active_nodes_skips_unsupported_versions():
+    nodes = [
+        _node("new"),
+        _node("old", "3.2.2"),
+        _node("offline", connected=False),
+        _node("disabled", disabled=True),
+    ]
+
+    active = await _with_nodes(StubNodes(nodes=nodes)).get_active_nodes()
+
+    assert [node.name for node in active] == ["new"]
+
+
+@pytest.mark.parametrize(
+    ("version", "expected"),
+    [
+        ("3.3.0", True),
+        ("3.4.2", True),
+        ("v3.3.1", True),
+        ("4.0", True),
+        ("3.3.0-dev", True),
+        ("3.2.2", False),
+        ("2.7.0", False),
+        ("unknown", True),
+        (None, True),
+    ],
+)
+def test_supports_geocheck(version: str | None, expected: bool) -> None:  # noqa: FBT001
+    assert supports_geocheck(_node("nl-1", version)) is expected
