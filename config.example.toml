@@ -13,6 +13,10 @@ interval = 3600
 sources = ["services", "geoip", "stash"]  # Excluded CDN
 state_file = "data/state.json"
 
+# [watcher.excluded_checks]  # Checks to ignore (ID or name), by node name or glob
+# "nl-*" = ["netflix_access"]
+# "de-1" = ["Google", "YouTube*"]
+
 [geocheck]
 # interface = "eth0"  # Interface name or local IP on every node
 

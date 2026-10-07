@@ -14,6 +14,7 @@ from importlib.metadata import version
 import httpx
 
 from geo_watcher.config import Config, ConfigError
+from geo_watcher.exclusions import CheckExclusions
 from geo_watcher.remnawave import AccessError, RemnawaveGeocheck, create_sdk
 from geo_watcher.state import StateStore
 from geo_watcher.telegram import Notifier, NullNotifier, TelegramNotifier
@@ -74,6 +75,7 @@ async def run(config: Config, *, once: bool) -> None:
             store=StateStore(config.watcher.state_file),
             notifier=create_notifier(config, http),
             sources=config.watcher.sources,
+            exclusions=CheckExclusions(config.watcher.excluded_checks),
         )
         logger.info(
             "Starting geo-watcher %s with sources: %s",

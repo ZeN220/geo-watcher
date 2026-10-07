@@ -41,6 +41,7 @@ class Watcher:
         default_factory=lambda: [Source.SERVICES, Source.GEOIP, Source.STASH],
     )
     state_file: str = "state.json"
+    excluded_checks: dict[str, list[str]] = field(default_factory=dict)
 
 
 @dataclass

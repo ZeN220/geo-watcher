@@ -5,6 +5,7 @@ import time
 from remnawave.types import Node
 
 from geo_watcher.analysis import NodeReport, analyze, merge_state
+from geo_watcher.exclusions import CheckExclusions
 from geo_watcher.remnawave import RemnawaveGeocheck
 from geo_watcher.report import Source, parse_observations
 from geo_watcher.state import State, StateStore
@@ -22,11 +23,13 @@ class GeoWatcher:
         store: StateStore,
         notifier: Notifier,
         sources: list[Source],
+        exclusions: CheckExclusions | None = None,
     ):
         self._geocheck = geocheck
         self._store = store
         self._notifier = notifier
         self._sources = sources
+        self._exclusions = exclusions or CheckExclusions()
         self._semaphore = asyncio.Semaphore(MAX_CONCURRENT_CHECKS)
 
     async def check_access(self) -> None:
@@ -68,7 +71,10 @@ class GeoWatcher:
 
         key = str(node.uuid)
         previous = state.get(key, {})
-        observations = parse_observations(report, self._sources)
+        observations = self._exclusions.apply(
+            node.name,
+            parse_observations(report, self._sources),
+        )
         result = analyze(node.name, observations, previous)
         state[key] = merge_state(previous, observations)
         log_result(result)

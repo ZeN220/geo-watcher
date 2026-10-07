@@ -31,6 +31,9 @@ message_thread_id = 42
 interval = 600
 sources = ["services", "cdn"]
 
+[watcher.excluded_checks]
+"nl-*" = ["netflix_access"]
+
 [geocheck]
 interface = "eth0"
 
@@ -73,6 +76,7 @@ def test_full_config_is_loaded(tmp_path: Path):
     assert config.watcher.interval == 600
     assert config.watcher.sources == [Source.SERVICES, Source.CDN]
     assert config.watcher.state_file == "state.json"
+    assert config.watcher.excluded_checks == {"nl-*": ["netflix_access"]}
     assert config.geocheck.interface_for("nl-1") == "wg0"
     assert config.geocheck.interface_for("nl-2") == "ens3"
     assert config.geocheck.interface_for("de-1") == "eth0"
