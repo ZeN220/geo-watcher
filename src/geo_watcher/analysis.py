@@ -18,12 +18,14 @@ class NodeReport:
     node_name: str
     observations: list[Observation]
     changes: list[Change]
+    node_country: str | None = None
 
 
 def analyze(
     node_name: str,
     observations: list[Observation],
     previous: dict[str, str],
+    node_country: str | None = None,
 ) -> NodeReport:
     changes = [
         Change(observation=o, previous=previous[o.key])
@@ -34,6 +36,7 @@ def analyze(
         node_name=node_name,
         observations=observations,
         changes=changes,
+        node_country=node_country,
     )
 
 

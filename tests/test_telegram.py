@@ -1,3 +1,5 @@
+import pytest
+
 from geo_watcher import emoji
 from geo_watcher.analysis import analyze
 from geo_watcher.report import CheckKind, Family, Observation, Source
@@ -44,6 +46,27 @@ def test_country_change_renders_flags_and_escapes_names():
     assert '<td align="center"><mark>🇷🇺 RU</mark>' in html
     assert "</tg-emoji> Geography</h4>" in html
     assert "Availability</h4>" not in html
+
+
+@pytest.mark.parametrize(
+    ("node_country", "heading"),
+    [
+        ("NL", "<h3>🇳🇱 nl-1</h3>"),
+        ("de", "<h3>🇩🇪 nl-1</h3>"),
+        ("XX", "<h3>nl-1</h3>"),
+        (None, "<h3>nl-1</h3>"),
+    ],
+)
+def test_node_country_flag_comes_first(node_country: str | None, heading: str):
+    google = _country("google", "NL")
+    result = analyze(
+        "nl-1",
+        [google],
+        {google.key: "NL"},
+        node_country=node_country,
+    )
+
+    assert heading in format_html(result, custom_emoji=False)
 
 
 def test_availability_values_are_left_aligned():

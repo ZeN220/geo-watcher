@@ -75,7 +75,12 @@ class GeoWatcher:
             node.name,
             parse_observations(report, self._sources),
         )
-        result = analyze(node.name, observations, previous)
+        result = analyze(
+            node.name,
+            observations,
+            previous,
+            node_country=node.country_code,
+        )
         state[key] = merge_state(previous, observations)
         log_result(result)
         if result.changes:

@@ -101,7 +101,8 @@ def _has_degradation(changes: list[Change]) -> bool:
 
 def _flag(code: str) -> str:
     letters = 2
-    if len(code) != letters or not code.isalpha():
+    code = code.upper()
+    if len(code) != letters or not code.isalpha() or code == "XX":
         return ""
     return "".join(chr(0x1F1E6 + ord(letter) - ord("A")) for letter in code)
 
@@ -122,14 +123,6 @@ def _name(observation: Observation, *, custom: bool) -> str:
     if observation.family is None:
         return name
     return f"{name} <sup>{observation.family.value}</sup>"
-
-
-def _icon(changes: list[Change], *, custom: bool) -> str:
-    if any(_severity(change) > 0 for change in changes):
-        return emoji.BAD.html(custom=custom)
-    if any(_severity(change) < 0 for change in changes):
-        return emoji.GOOD.html(custom=custom)
-    return emoji.GEO.html(custom=custom)
 
 
 def _rows(changes: list[Change], *, custom: bool) -> str:
@@ -189,9 +182,12 @@ def format_html(result: NodeReport, *, custom_emoji: bool = True) -> str:
 
     geo_title = f"{emoji.GEO.html(custom=custom)} Geography"
     access_title = f"{emoji.AVAILABILITY.html(custom=custom)} Availability"
+    flag = _flag(result.node_country or "")
+    heading = escape(result.node_name)
+    if flag:
+        heading = f"{flag} {heading}"
     body = (
-        f"<h3>{_icon(result.changes, custom=custom)} "
-        f"{escape(result.node_name)}</h3>"
+        f"<h3>{heading}</h3>"
         f'<p><tg-time unix="{int(time.time())}" format="r">just now'
         f"</tg-time></p>"
         f"{_section(geo_title, countries, custom=custom)}"
