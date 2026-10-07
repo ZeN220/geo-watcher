@@ -13,7 +13,7 @@ from geo_watcher.telegram import Notifier
 
 logger = logging.getLogger(__name__)
 
-MAX_CONCURRENT_CHECKS = 3
+MAX_CONCURRENT_CHECKS = 8
 
 
 class GeoWatcher:
