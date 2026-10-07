@@ -76,6 +76,10 @@ interval = 3600
 sources = ["services", "geoip", "stash"]
 state_file = "state.json"
 
+[watcher.excluded_checks]
+"nl-*" = ["netflix_access"]
+"de-1" = ["Google", "YouTube*"]
+
 [geocheck]
 interface = "eth0"
 
@@ -118,6 +122,7 @@ Telegram Premium on the account that owns the bot.
 | `interval` | `3600` | Delay between runs, in seconds. |
 | `sources` | `services`, `geoip`, `stash` | Report sections from geocheck to monitor. |
 | `state_file` | `state.json` | File containing the latest known value of every check. Relative paths are resolved from the working directory. |
+| `excluded_checks` | Empty | Checks to ignore on specific nodes, keyed by node name or a glob pattern such as `"nl-*"`. See [Excluding checks](#excluding-checks). |
 
 Supported sources:
 
@@ -127,6 +132,20 @@ Supported sources:
 | `geoip` | Country results from GeoIP providers. |
 | `cdn` | Country results reported by CDN endpoints. |
 | `stash` | Availability and regional access checks from the geocheck stash. |
+
+#### Excluding checks
+
+`excluded_checks` maps a node name or glob pattern to a list of checks that
+geo-watcher ignores on matching nodes. Excluded checks are not compared,
+logged, notified about or written to the state file. If several patterns match
+a node, their lists are combined.
+
+Each entry is matched against both the check ID and its name, so you can copy
+the name straight from a notification, for example `"Netflix"`. IDs are more
+stable: a name may change when geocheck renames a check. The ID is the middle
+part of a key in the state file: `stash/netflix_access` means
+`netflix_access`. Matching is case-sensitive and supports `*`, `?` and `[...]`;
+a name containing square brackets must be excluded by its ID.
 
 ### Geocheck
 
